@@ -19,7 +19,7 @@ team_members:
 # ============================================================================
 # Code and reproducibility
 # ============================================================================
-github_repo: "<FILL: https://github.com/USERNAME/redrob-ranker>"
+github_repo: "https://github.com/saanviv812/redrob_indiaruns_stardustteam"
 sandbox_link: "<FILL: HuggingFace Spaces / Streamlit / Colab link running rank.py on a small sample>"
 
 # The single command that produces submission.csv (Stage-3 reproduction). Pre-computation
