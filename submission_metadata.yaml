@@ -1,0 +1,80 @@
+# Redrob Hackathon — submission metadata. Mirrors the portal fields (spec §10.2).
+# Fields marked <FILL: ...> are team-specific and must be set before upload — I cannot know them.
+
+# ============================================================================
+# Team identity
+# ============================================================================
+team_name: "<FILL: your registered team name>"
+
+primary_contact:
+  name: "<FILL: full name>"
+  email: "saanvivarma.raghavaraju@gmail.com"
+  phone: "<FILL: +91-XXXXXXXXXX>"
+
+team_members:
+  - name: "<FILL: member full name>"
+    email: "saanvivarma.raghavaraju@gmail.com"
+    role: "ML / Ranking Engineer"
+
+# ============================================================================
+# Code and reproducibility
+# ============================================================================
+github_repo: "<FILL: https://github.com/USERNAME/redrob-ranker>"
+sandbox_link: "<FILL: HuggingFace Spaces / Streamlit / Colab link running rank.py on a small sample>"
+
+# The single command that produces submission.csv (Stage-3 reproduction). Pre-computation
+# (precompute.py, offline, ~10 min) is run first and may exceed the 5-minute window per spec §10.3.
+reproduce_command: "python src/rank.py --candidates ./candidates.jsonl --out ./submission.csv"
+
+# ============================================================================
+# Compute environment (measured on the build machine)
+# ============================================================================
+compute:
+  platform: "Local Windows box"
+  cpu_cores: 16
+  ram_gb: 16
+  python_version: "3.11.9"
+  os: "Windows 11"
+  uses_gpu_for_inference: false        # verified by src/compliance_check.py (no CUDA/torch)
+  has_network_during_ranking: false    # verified by src/compliance_check.py (no HTTP/LLM SDKs)
+  pre_computation_required: true        # precompute.py builds cache/ offline
+  pre_computation_time_minutes: 10      # ~577s measured on the full 100K pool
+  ranking_step_seconds: 19              # rank.py measured end-to-end (scoring itself ~0.5s)
+  cache_disk_gb: 0.014                  # well under the 5 GB intermediate-state budget
+
+# ============================================================================
+# AI tools declaration (transparency only — declared use is NOT penalized)
+# ============================================================================
+ai_tools_used:
+  - "Claude"
+
+ai_usage_summary: |
+  Used Claude for architecture discussion, exploratory data analysis against the real 100K pool,
+  and code authoring/review. Every threshold and weight was verified against the actual data
+  before being trusted (see notebooks/). No candidate data was sent to any hosted LLM, and the
+  ranking step (rank.py) makes zero network calls.
+
+# ============================================================================
+# Approach summary
+# ============================================================================
+methodology_summary: |
+  Deterministic, EDA-calibrated, certainty-gated ranker. A 17-criterion JD checklist is scored by a
+  two-lane hybrid retrieval signal (TF-IDF+LSA matched at the career-ENTRY level with max-evidence,
+  fused with BM25 via Reciprocal Rank Fusion) and blended 0.85/0.15 with the retrieval component.
+  Structural facts (experience fit, applied-ML years, availability, GitHub/assessment positives)
+  and eight JD-named dealbreakers are layered on as gates: structural/certain ones are hard
+  multiplicative gates, text-derived ones are soft penalties scaled by match strength. Two
+  EDA-verified honeypot rules (clean statistical separation in the real data) apply a near-zero
+  (x0.01) multiplier, keeping all 68 detected honeypots out of the top-100. Recency is anchored to
+  the corpus timeline, never the wall clock. All heavy work is precomputed offline; the timed
+  ranking step is pure cache-load + vectorized arithmetic (~19s, <16GB, CPU, no network).
+
+# ============================================================================
+# Declarations
+# ============================================================================
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true        # 2 EDA-verified rules; 0 honeypots in top-100 (eval/evaluate.py)
+  reproduction_tested: true        # rank.py runs end-to-end and passes validate_submission.py
