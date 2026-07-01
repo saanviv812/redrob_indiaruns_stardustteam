@@ -24,3 +24,6 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# Downloaded embedding model (tested and NOT adopted — dense embeddings hurt on this task; see notebooks/llm_judge_validation.md)
+models/
