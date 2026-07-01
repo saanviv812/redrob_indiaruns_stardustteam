@@ -2,8 +2,12 @@
 # Stage 3 reproduces rank.py inside a sandbox from this file, so versions are pinned.
 # Deliberately minimal: no transformers/torch (see UPDATED_ARCHITECTURE.md §1.1) — the
 # only heavy dep is scikit-learn, which we already need for TF-IDF + TruncatedSVD.
+# --- Ranking pipeline (used by rank.py / precompute.py; this block is all Stage-3 reproduction needs) ---
 numpy==2.4.6
 scipy==1.17.1
 scikit-learn==1.9.0
 rank-bm25==0.2.2
 PyYAML==6.0.2
+
+# --- Sandbox demo app ONLY (app.py; NOT imported by the ranker) — for the HF Spaces / Streamlit Cloud link ---
+streamlit==1.58.0

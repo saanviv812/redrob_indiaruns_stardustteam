@@ -73,12 +73,14 @@ def compute_criteria_scores(
 
     # --- Fit TF-IDF on the full candidate corpus + criterion queries (shared vocabulary). ---
     fit_corpus = entries_exp + skills_texts + summary_exp + criterion_texts
+    # min_df=2 drops hapax noise across 100K docs, but on a tiny sample (the ≤100-candidate sandbox
+    # demo) it can empty the vocabulary — so relax to 1 for small corpora.
     vectorizer = TfidfVectorizer(
         ngram_range=TFIDF_NGRAM_RANGE,
         max_features=TFIDF_MAX_FEATURES,
         lowercase=True,
         sublinear_tf=True,        # dampens repeated terms (standard for relevance)
-        min_df=2,                 # drop hapax noise across 100K docs
+        min_df=2 if len(fit_corpus) >= 200 else 1,
     )
     vectorizer.fit(fit_corpus)
     logger.info("TF-IDF vocabulary: %d terms", len(vectorizer.vocabulary_))
@@ -91,8 +93,12 @@ def compute_criteria_scores(
     # --- Fit LSA (TruncatedSVD) on the candidate text (entries dominate the latent space). ---
     from scipy.sparse import vstack as sp_vstack
 
-    svd = TruncatedSVD(n_components=SVD_COMPONENTS, random_state=RANDOM_SEED)
-    svd.fit(sp_vstack([entry_tfidf, skills_tfidf, summary_tfidf]))
+    fit_matrix = sp_vstack([entry_tfidf, skills_tfidf, summary_tfidf])
+    # TruncatedSVD needs n_components < min(n_samples, n_features). Cap it so the tiny-sample sandbox
+    # demo (≤100 candidates) doesn't crash; full-pool runs are unaffected (cap >> SVD_COMPONENTS there).
+    n_comp = max(1, min(SVD_COMPONENTS, fit_matrix.shape[0] - 1, fit_matrix.shape[1] - 1))
+    svd = TruncatedSVD(n_components=n_comp, random_state=RANDOM_SEED)
+    svd.fit(fit_matrix)
     logger.info("LSA explained variance (sum of %d comps): %.3f",
                 SVD_COMPONENTS, float(svd.explained_variance_ratio_.sum()))
 

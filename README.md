@@ -70,6 +70,22 @@ python -m unittest discover -s tests -v        # 23 tests
 python src/compliance_check.py                 # no-network / no-GPU / disk proof
 ```
 
+## Sandbox demo (`app.py`) — required by spec §10.5
+
+A one-file Streamlit app: upload a ≤100-candidate JSONL sample → the **full pipeline** (offline
+precompute + CPU-only, no-network ranking) runs → shows the ranked candidates + reasoning and a
+downloadable CSV. Runs in ~1–2s on a small sample (well within the ≤5-min CPU budget).
+
+Run locally: `streamlit run app.py`
+
+**Deploy the required hosted link (free):**
+- **Streamlit Community Cloud** (simplest — deploys straight from this GitHub repo): share.streamlit.io
+  → "New app" → pick this repo → main file `app.py` → Deploy. It installs `requirements.txt` and serves.
+- **HuggingFace Spaces**: create a Streamlit Space, push this repo's contents, `app_file: app.py`.
+
+(`streamlit` is listed separately in `requirements.txt` and is **not** imported by the ranker — the
+Stage-3 reproduction of `rank.py` needs only the ranking-pipeline block.)
+
 ## Repo layout
 
 ```
