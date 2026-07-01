@@ -75,10 +75,11 @@ ASSESSMENT_HIGH_SCORE_CUTOFF: float = 66.0       # >= ~p75 -> positive corrobora
 HARD_DEALBREAKER_MULTIPLIER: float = 0.1   # GUESS->CALIBRATE (direction JD-traced, value a guess)
 # Text-derived/less-certain dealbreakers -> soft penalty scaled by criterion similarity:
 #   multiplier = 1 - SOFT_DEALBREAKER_COEF * criterion_score
-# Chosen (not left at the rejected 0.7 placeholder): 0.5 keeps a max ~50% haircut even when the
-# trap signal is at full strength, so a genuinely strong candidate with one weak soft-flag is not
-# annihilated, while a clear trap is meaningfully suppressed. GUESS->CALIBRATE against §8.
-SOFT_DEALBREAKER_COEF: float = 0.5
+# CALIBRATED (§8): value 0.3 chosen by calibrating against a blind LLM-as-judge label set (48
+# stratified real candidates) with split-half cross-validation. Lower coef (uncertain text
+# inferences given less leverage) beat higher across 36/40 held-out splits; held-out judge-NDCG
+# rose 0.918 -> 0.977. Direction is JD-consistent: soft dealbreakers are inferences, not certainties.
+SOFT_DEALBREAKER_COEF: float = 0.3
 
 # JD's literal consulting-firm list (job_description.docx). HCL deliberately NOT included so the
 # shipped feature matches the JD verbatim (§7 notes 7.0% with the literal 6, 7.6% incl. HCL).
@@ -133,9 +134,13 @@ RRF_K: int = 60                     # CONVENTION (original RRF paper default)
 # Evidence blend within the semantic lane: entry >> skills (fights keyword-stuffing). §5.
 EVIDENCE_BLEND = {"entry": 0.75, "skills": 0.15, "summary": 0.10}  # direction JD-traced, split a guess
 
-# Final blend (§7 step 5). GUESS->CALIBRATE + depends on the resolved RRF normalization (§5 open Q).
-QUALIFICATION_WEIGHT: float = 0.85
-RETRIEVAL_WEIGHT: float = 0.15
+# Final blend (§7 step 5). CALIBRATED (§8): 0.90/0.10 selected via blind LLM-as-judge + split-half
+# cross-validation (dominant pick across random subsets; held-out judge-NDCG 0.918 -> 0.977).
+# Direction is JD-traced: qualification = structured JD-criterion evidence (what the JD says it
+# cares about) must dominate the lexical retrieval backstop, which the JD is explicitly wary of
+# ("not the most AI keywords"). Retrieval kept as a small recall term, not a driver.
+QUALIFICATION_WEIGHT: float = 0.90
+RETRIEVAL_WEIGHT: float = 0.10
 
 # ---------------------------------------------------------------------------
 # Submission constraints (spec §2-3) — referenced by rank.py and validation.

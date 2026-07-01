@@ -1,0 +1,49 @@
+candidate_id,tier,note
+CAND_0073853,0,ops/marketing prof dabbling with ChatGPT; no real AI
+CAND_0000115,0,marketing/ops; no AI skills; incoherent career
+CAND_0055792,1,.NET/backend eng; self-learner AI; skills overclaim vs assessments
+CAND_0000029,0,BA/mech/civil grab-bag career; no AI; dead response rate
+CAND_0001673,0,HR Manager keyword-stuffer (Sentence Transformers/Embeddings tags); 11% response
+CAND_0095480,1,junior .NET dev; hobby RAG; 2.3y
+CAND_0000092,0,marketing BA; no AI; 5% response
+CAND_0051004,4,genuine applied AI: embedding retrieval+RAG production, assessments Embeddings=90/SemSearch=78
+CAND_0046649,0,BA/civil; SAP/Node; no AI
+CAND_0020991,3,real applied ML + recsys + Weaviate/OpenSearch; github 65 resp .88
+CAND_0001837,0,Marketing Manager keyword-stuffer (Pinecone/Embeddings tags) - JD's exact trap
+CAND_0077239,0,Content Writer; single role 139mo > total exp (inflation); no AI
+CAND_0001389,2,junior ML (forecasting) at services firm; some ML
+CAND_0000578,2,data engineer 'building competence on ML side'; adjacent, not there yet
+CAND_0075931,3,backend/data eng but corroborated recsys/SentenceTransformers=80 - JD Tier-5 case
+CAND_0005247,0,Civil Engineer keyword-stuffer (FAISS/RAG/LangChain tags)
+CAND_0001458,1,backend SWE; hobby RAG; Qdrant assessment 34 overclaim
+CAND_0044855,4,ideal: recsys/ranking/retrieval at Flipkart+LinkedIn; LTR/IR expert
+CAND_0046098,1,analytics/data eng at consulting; CV-leaning; aspirational ML
+CAND_0008456,2,data scientist but CV career (image moderation); some retrieval skills
+CAND_0000017,0,accountant/marketing grab-bag; no AI
+CAND_0044696,3,CV title but genuine NLP/retrieval (Elasticsearch=77) + good signals
+CAND_0099806,4,ideal: ranking+retrieval production AI eng; github 87 resp .76 notice 30
+CAND_0001771,1,services SWE; hobby AI; TCS
+CAND_0047521,3,applied ML recsys/retrieval; had product exp; strong behavioral
+CAND_0001896,0,Sales Executive keyword-stuffer (RAG/FAISS/LangChain); 2.7y
+CAND_0071974,4,perfect: hybrid retrieval+ranking+finetune at Netflix/Meta; assessments 77-87
+CAND_0085458,2,analytics/data eng; Pinecone=80 but career is data infra not ML
+CAND_0000167,0,BA/accountant/HR grab-bag incoherent career; no AI
+CAND_0007411,3,perfect skills (VectorSearch=91/BM25=87) BUT 12% response + not open to work - JD down-weight
+CAND_0001915,1,devops/infra; hobby AI
+CAND_0008533,2,junior data scientist; mixed CV+recsys; moderate signals
+CAND_0019210,2,ML eng but CV-heavy skills; NLP pipelines; services
+CAND_0006870,2,junior applied ML; some retrieval FAISS/BM25; AI startup
+CAND_0010257,4,ideal: recsys/retrieval/ranking + evaluation rigor at Google; OpenSearch=90
+CAND_0002126,0,Civil Engineer keyword-stuffer; 2y; 7% response
+CAND_0052195,2,CV career (image moderation) w/ some NLP/retrieval; adjacent
+CAND_0001237,1,junior frontend dev; hobby AI; OpenSearch assessment 28
+CAND_0002839,0,Accountant keyword-stuffer (HF/IR/Recsys/Vector tags) - textbook trap
+CAND_0054100,3,applied ML w/ VectorSearch=82 corroborated; strong signals
+CAND_0002296,1,junior devops at services; minimal AI
+CAND_0004673,0,Customer Support keyword-stuffer (LangChain/Pinecone tags); 12y grab-bag
+CAND_0022023,3,applied NLP/ML w/ semantic search; MachineLearning=88 SemSearch=70
+CAND_0001346,1,junior devops; hobby AI; non-India
+CAND_0096142,4,ideal: recsys/ranking/retrieval at upGrad/BYJU'S; Pinecone=82 Weaviate=86 resp .84
+CAND_0005155,0,Civil Engineer keyword-stuffer (VectorSearch/FAISS/Finetune tags)
+CAND_0008517,3,applied ML/NLP w/ recsys; coherent career; resp .80
+CAND_0014188,2,junior CV-leaning applied ML; some retrieval
