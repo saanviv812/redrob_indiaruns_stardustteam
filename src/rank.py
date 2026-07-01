@@ -238,16 +238,21 @@ def run(candidates_path: str, out_path: str, with_reasoning: bool = True) -> lis
         )
 
     crit = cache["criteria"]
+    # Relative strength (score / top score) grades the reasoning tone so it matches the rank — a
+    # strong rank-1 reads "strong fit", a weak/borderline candidate reads "adjacent/limited signal".
+    top_score = float(scores["final"][top[0]]) if top else 1.0
     rows: list[dict] = []
     for rank, i in enumerate(top, start=1):
         cid = ids[i]
         if with_reasoning:
             cand = records[cid]
+            strength = (float(scores["final"][i]) / top_score) if top_score > 0 else 0.0
             reasoning = generate_reasoning(
                 cand,
                 _top_must_have_ids(crit[i]),
                 _concerns(cand, cache, scores, i),
                 float(cache["structural"]["days_since_last_active"][i]),
+                strength=max(0.0, min(1.0, strength)),
             )
         else:
             reasoning = ""

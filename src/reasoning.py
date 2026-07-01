@@ -76,16 +76,32 @@ def _experience_fragment(cand: dict, rng: random.Random) -> str:
     return rng.choice(templates)
 
 
-def _qualification_fragment(top_must_have_ids: list[str], rng: random.Random) -> str:
+def _qualification_fragment(top_must_have_ids: list[str], rng: random.Random, strength: float) -> str:
+    """Language is GRADED by the candidate's relative strength so the tone matches the rank
+    (Stage-4 "rank consistency" check): confident wording only for genuinely strong candidates,
+    measured/hedged wording for weak ones — never "strong fit" on a low-scored profile."""
     labels = [_MUST_HAVE_LABEL[i] for i in top_must_have_ids if i in _MUST_HAVE_LABEL]
     if not labels:
         return ""
     joined = " and ".join(labels[:2])
-    templates = [
-        f"strong fit on the JD's {joined} needs",
-        f"matches the JD's {joined} requirements",
-        f"profile signals {joined}, central to this role",
-    ]
+    if strength >= 0.60:
+        templates = [
+            f"strong fit on the JD's {joined} needs",
+            f"matches the JD's {joined} requirements",
+            f"profile signals {joined}, central to this role",
+        ]
+    elif strength >= 0.30:
+        templates = [
+            f"relevant signal on the JD's {joined}",
+            f"partial match on {joined}",
+            f"some experience touching {joined}",
+        ]
+    else:
+        templates = [
+            f"only adjacent/limited signal on {joined}",
+            f"weak direct evidence on the JD's {joined}",
+            f"surface keyword overlap on {joined}, not substantiated",
+        ]
     return rng.choice(templates)
 
 
@@ -118,6 +134,7 @@ def generate_reasoning(
     top_must_have_ids: list[str],
     concerns: list[str],
     days_since_active: float,
+    strength: float = 1.0,
 ) -> str:
     """Compose a varied, fact-grounded, rank-consistent reasoning string (<=250 chars).
 
@@ -127,6 +144,8 @@ def generate_reasoning(
     top_must_have_ids : must-have criterion ids this candidate scored highest on (JD connection).
     concerns          : honestly-named triggered concerns (honeypot/dealbreaker/availability/notice).
     days_since_active : corpus-anchored recency (for the behavioral fragment).
+    strength          : candidate's relative strength in [0,1] (score / top score) — grades the
+                        qualification wording so tone matches rank (Stage-4 rank-consistency check).
     """
     rng = _candidate_rng(cand.get("candidate_id", ""))
 
@@ -134,7 +153,7 @@ def generate_reasoning(
     # fragments are distinct fact types (qualification / skills / behavior), shuffled for variety.
     lead = _experience_fragment(cand, rng)
     body = [
-        _qualification_fragment(top_must_have_ids, rng),
+        _qualification_fragment(top_must_have_ids, rng, strength),
         _skills_fragment(_top_skills(cand), rng),
         _behavior_fragment(cand, days_since_active, rng),
     ]
