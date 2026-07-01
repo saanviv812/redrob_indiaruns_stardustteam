@@ -18,7 +18,9 @@ import io_utils as io  # noqa: E402
 import rank  # noqa: E402
 
 OUT = Path("C:/Users/saanv/AppData/Local/Temp/claude/c--Personal-Saanvi-DELL-Personal-SaanviVarma-Hackathosn-INDIA-RUNS-TRACK1/c7ac4723-403e-43e2-a9d9-2614966fdc4b/scratchpad")
-SEED = 20260702
+# Optional seed override + output suffix (for drawing an independent second sample): argv[2]=seed, argv[3]=suffix
+SEED = int(sys.argv[2]) if len(sys.argv) > 2 else 20260702
+SUFFIX = sys.argv[3] if len(sys.argv) > 3 else ""
 TRAP = {"business analyst","hr manager","mechanical engineer","accountant","project manager",
         "customer support","operations manager","content writer","sales executive",
         "civil engineer","graphic designer","marketing manager"}
@@ -80,17 +82,28 @@ def main():
     our_rank = {ids[i]: r for r, i in enumerate(order, 1)}
     idpos = {c: i for i, c in enumerate(ids)}
 
+    # Exclude candidates already in the first sample, so a second sample is truly independent.
+    exclude: set[str] = set()
+    first_key = OUT / "judge_key.json"
+    if SUFFIX and first_key.exists():
+        exclude = set(json.loads(first_key.read_text(encoding="utf-8")))
+
+    # Collect the FULL population of each stratum (unbiased), then random-sample the quota from it.
+    # (Earlier this capped at the first ~40*quota candidates in file order — a selection bias if the
+    #  file is ordered by any property. Collecting all removes that.)
     buckets: dict[str, list[str]] = {k: [] for k in QUOTA}
     for cand in io.iter_candidates(sys.argv[1]):
         cid = cand["candidate_id"]
+        if cid in exclude:
+            continue
         st = stratum(cand, our_rank[cid], hp[idpos[cid]] > 0.5)
-        if st and len(buckets[st]) < QUOTA[st] * 40:  # collect a pool per stratum to sample from
+        if st:
             buckets[st].append(cid)
 
     rng = random.Random(SEED)
     chosen: dict[str, str] = {}   # id -> stratum
     for st, pool in buckets.items():
-        pick = rng.sample(pool, min(QUOTA[st], len(pool)))
+        pick = rng.sample(pool, min(QUOTA[st], len(pool)))  # uniform random over the whole stratum
         for cid in pick:
             chosen[cid] = st
 
@@ -102,16 +115,17 @@ def main():
 
     shuffled = list(chosen.keys()); rng.shuffle(shuffled)
     OUT.mkdir(parents=True, exist_ok=True)
-    with open(OUT / "judge_profiles.txt", "w", encoding="utf-8") as f:
+    prof_name, key_name = f"judge_profiles{SUFFIX}.txt", f"judge_key{SUFFIX}.json"
+    with open(OUT / prof_name, "w", encoding="utf-8") as f:
         f.write("# BLIND JUDGING SET — assign each a relevance tier 0-4 vs the JD.\n")
         f.write("# 4=ideal fit, 3=strong, 2=partial/adjacent, 1=weak, 0=not a fit / honeypot / trap.\n\n")
         for cid in shuffled:
             f.write(profiles[cid] + "\n\n")
     key = {cid: {"stratum": chosen[cid], "our_rank": our_rank[cid]} for cid in chosen}
-    (OUT / "judge_key.json").write_text(json.dumps(key, indent=1), encoding="utf-8")
+    (OUT / key_name).write_text(json.dumps(key, indent=1), encoding="utf-8")
     from collections import Counter
     print("sample composition:", dict(Counter(chosen.values())), "total:", len(chosen))
-    print("wrote", OUT / "judge_profiles.txt")
+    print("wrote", OUT / prof_name)
 
 
 if __name__ == "__main__":
