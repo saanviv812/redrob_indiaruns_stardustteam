@@ -20,7 +20,7 @@ team_members:
 # Code and reproducibility
 # ============================================================================
 github_repo: "https://github.com/saanviv812/redrob_indiaruns_stardustteam"
-sandbox_link: "<FILL: HuggingFace Spaces / Streamlit / Colab link running rank.py on a small sample>"
+sandbox_link: "https://redrobindiarunsstardustteam.streamlit.app/"
 
 # The single command that produces submission.csv (Stage-3 reproduction). Pre-computation
 # (precompute.py, offline, ~10 min) is run first and may exceed the 5-minute window per spec §10.3.
