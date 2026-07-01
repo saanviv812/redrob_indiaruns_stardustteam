@@ -69,9 +69,29 @@ else:
         st.success(
             f"Ranked {len(rows)} candidates in {elapsed:.1f}s — CPU-only, no network, deterministic."
         )
+        st.caption(
+            "Reasoning wording is intentionally varied per candidate (a randomized fragment pool) so "
+            "the sampled rows read as distinct — the Stage-4 review checks that reasonings are *not* "
+            "templated. Tone also scales with rank (confident for strong fits, measured for weak ones)."
+        )
+
+        # Sortable overview table — reasoning column widened; long text still truncates in a cell,
+        # so the full text is shown in the readable list below (no horizontal scrolling needed).
         table = [{"rank": r["rank"], "candidate_id": r["candidate_id"],
                   "score": round(r["score"], 4), "reasoning": r["reasoning"]} for r in rows]
-        st.dataframe(table, use_container_width=True, hide_index=True)
+        st.dataframe(
+            table, use_container_width=True, hide_index=True,
+            column_config={
+                "rank": st.column_config.NumberColumn(width="small"),
+                "candidate_id": st.column_config.TextColumn(width="medium"),
+                "score": st.column_config.NumberColumn(width="small", format="%.4f"),
+                "reasoning": st.column_config.TextColumn(width="large"),
+            },
+        )
+
+        with st.expander("📖 Full reasoning (readable — no scrolling)", expanded=True):
+            for r in rows:
+                st.markdown(f"**#{r['rank']} · {r['candidate_id']} · score {r['score']:.4f}** — {r['reasoning']}")
 
         buf = _io.StringIO()
         w = csv.writer(buf)
