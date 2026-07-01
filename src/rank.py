@@ -30,6 +30,7 @@ import io_utils as io
 from config import (
     AVAILABILITY_INACTIVE_RESPONSE_CUTOFF,
     AVAILABILITY_MULTIPLIERS,
+    GITHUB_BONUS_MAX,
     HARD_DEALBREAKER_MULTIPLIER,
     HONEYPOT_MULTIPLIER,
     NOTICE_PERIOD_PREFERRED_MAX_DAYS,
@@ -37,6 +38,7 @@ from config import (
     RECENCY_BUCKET_DAYS,
     RETRIEVAL_WEIGHT,
     SOFT_DEALBREAKER_COEF,
+    SOFT_PREF_ASSESSMENT_COEF,
     SOFT_PREF_EXPERIENCE_COEF,
     SOFT_PREF_LOCATION_BONUS,
     SOFT_PREF_NOTICE_BONUS,
@@ -138,8 +140,8 @@ def compute_scores(cache: dict) -> dict:
         SOFT_PREF_LOCATION_BONUS * struct["location_acceptable"]
         + SOFT_PREF_NOTICE_BONUS * struct["notice_period_ok"]
         + SOFT_PREF_EXPERIENCE_COEF * (struct["experience_band_fit"] - 1.0)
-        + 0.03 * struct["assessment_corroboration"]   # objective positive (§7)
-        + 0.02 * struct["github_positive"]            # real OSS signal (§7)
+        + SOFT_PREF_ASSESSMENT_COEF * struct["assessment_corroboration"]  # objective positive (§7)
+        + GITHUB_BONUS_MAX * struct["github_signal"]                      # graded OSS nice-to-have (§7)
     ).astype(np.float64)
 
     # 8. final score. Soft pref multiplied by honeypot_mult so a flagged honeypot can NEVER be

@@ -8,28 +8,36 @@ Reproduce with the snippet at the bottom.
 
 | Quantity | Value |
 |---|---|
-| Rule 1 — experience inflation (`|yoe − Σmonths/12| > 2.5y`) | **47** flagged |
+| Rule 1 — experience inflation, **DIRECTIONAL** (`Σmonths/12 − yoe > 2.5y`) | **22** flagged |
 | Rule 2 — expert-skill overload (`≥3 "expert" skills, duration ≤3mo`) | **21** flagged |
 | Overlap between the two rules | **0** |
-| **Unique honeypots flagged (union)** | **68** |
+| **Unique honeypots flagged (union)** | **43** |
 | Documented target in the spec | ~80 |
+
+> **Directional fix (important).** An earlier version used the *symmetric* `|yoe − Σmonths/12| > 2.5`,
+> which flagged **47** — but 25 of those were the *benign* direction (stated experience EXCEEDING
+> listed career = an under-listed résumé, which is normal, not "impossible"). The spec's honeypot is
+> the *inflation* direction only ("8 years of experience at a company founded 3 years ago" = career
+> exceeding what's possible). So we now flag one-sided: `Σmonths/12 − yoe > 2.5`. This removes 25
+> false positives on the real pool (we were wrongly burying 25 legitimate candidates) and is verified
+> clean one-sided: inflation values sit at 1.92, 2.08, then jump to 3.27 — an empty gap around 2.5.
 
 ## Why these thresholds are clean, not guessed
 
-**Rule 1 — the gap is real.** The natural noise of `|years_of_experience − Σ career months / 12|`:
+**Rule 1 — the gap is real (inflation direction).** For `Σ career months / 12 − years_of_experience`
+(the inflation side only):
 
-- p99 = 0.283y
-- p99.9 = 0.367y
-- highest non-flagged value sits at/below ~2.08y; the band (2.0y, 2.5y] contains **exactly 1**
-  candidate, then **47** candidates above 2.5y, with the maximum at **15.4y**.
+- only 24 candidates are on the inflation side at all
+- values just below/above the threshold: 1.92, 2.08, then a jump to **3.27** — an empty gap around 2.5
+- **22** candidates above 2.5y, maximum ~15.3y
 
 So 2.5y is not a tuned knob — it sits inside an essentially empty gap between natural noise and a
-cluster of impossible profiles. Moving it anywhere in [0.4y, 2.0y] changes nothing.
+cluster of impossible profiles.
 
 **Rule 2 — even cleaner.** 99,979 / 100,000 candidates have **zero** expert-skills-with-≤3mo. The
 21 that fire have 3–5 such skills, never 1–2. The `≥3` threshold sits in an empty region.
 
-## The ~68 vs ~80 gap is a known, accepted shortfall
+## The ~43 vs ~80 gap is a known, accepted shortfall
 
 We are short of the documented ~80. Per `UPDATED_ARCHITECTURE.md` §6 we deliberately do **not**
 invent an uncalibrated third rule to close it:
@@ -67,5 +75,5 @@ r1 = r2 = union = 0
 for c in io.iter_candidates(DATA):
     f1, f2 = hp.experience_inflation_flag(c), hp.expert_skill_overload_flag(c)
     r1 += f1; r2 += f2; union += (f1 or f2)
-# -> r1=47, r2=21, union=68
+# -> r1=22 (directional inflation), r2=21, union=43
 ```

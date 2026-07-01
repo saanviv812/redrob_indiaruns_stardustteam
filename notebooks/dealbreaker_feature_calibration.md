@@ -39,7 +39,7 @@ consistent with the project rule "don't force a rule to fire; verify, then keep 
 |---|---|---|
 | `location_acceptable` (India or willing_to_relocate) | 82,244 (82.2%) | India alone is 75.1%; relocation adds the rest. |
 | `notice_period_ok` (≤30 days) | 13,809 (13.8%) | Matches documented 13.8% — confirms a soft +0.02 bonus (not a gate) is correct. |
-| `github_positive` (score > 60) | 1,749 (1.75%) | Matches documented "~1,766 above 60". Rare, so a real differentiator. |
+| `github_signal` (graded score/100) | 35% have any (>0); ~1.75% above 60 | JD nice-to-have credited proportionally (not a binary cutoff); `-1`/absent = neutral. |
 | `assessment_corroboration > 0` (≥1 skill scoring ≥66) | 7,228 (7.2%) | Objective, hard-to-game positive. |
 
 ## Honest implication for Stage 5

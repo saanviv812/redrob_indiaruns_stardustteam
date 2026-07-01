@@ -39,10 +39,15 @@ _CLAIMED_HIGH = {"advanced", "expert"}
 def experience_inflation_flag(cand: dict) -> bool:
     """Rule 1: stated years_of_experience vs summed career-history months differ by > 2.5y.
 
-    Honeypots stack impossibly long career histories against a modest stated experience (or vice
-    versa). Natural noise tops out ~0.37y (p99.9); the threshold sits in a clean empty gap. If
-    years_of_experience is missing we cannot evaluate the rule, so we do NOT flag (missing data
-    never triggers a gate — §7).
+    DIRECTIONAL (fixed): only career INFLATION — summed career history EXCEEDING stated experience
+    by >2.5y — is the "subtly impossible" pattern the spec names ("8 years of experience at a
+    company founded 3 years ago"). The opposite direction (stated experience exceeding listed
+    career, i.e. an under-listed resume) is perfectly normal and NOT a honeypot; flagging it is a
+    false positive. Verified against the real pool: the inflation side has a clean empty gap
+    (values at 1.92, 2.08, then a jump to 3.27 — nothing between), and it is the ONLY side that
+    corresponds to impossible profiles. An earlier symmetric `abs(...)` version false-flagged 25
+    legitimate under-listed candidates on the real pool (and 18k+ on LLM-generated stress sets).
+    Missing years_of_experience -> no flag (missing data never gates — §7).
     """
     prof = get_profile(cand)
     yoe = safe_float(prof.get("years_of_experience"), default=None)
@@ -54,7 +59,7 @@ def experience_inflation_flag(cand: dict) -> bool:
         if isinstance(dm, (int, float)):
             total_months += dm
     career_years = total_months / 12.0
-    return abs(yoe - career_years) > HONEYPOT_EXP_INFLATION_YEARS
+    return (career_years - yoe) > HONEYPOT_EXP_INFLATION_YEARS
 
 
 def expert_skill_overload_flag(cand: dict) -> bool:

@@ -55,7 +55,9 @@ CACHE_FILES = {
 # Honeypot gate (UPDATED_ARCHITECTURE.md §6, §16 item 2).
 # ---------------------------------------------------------------------------
 # VERIFIED thresholds (clean statistical separation in the real data):
-HONEYPOT_EXP_INFLATION_YEARS: float = 2.5   # |yoe - sum(career months)/12| > 2.5y -> flag
+HONEYPOT_EXP_INFLATION_YEARS: float = 2.5   # DIRECTIONAL: (sum(career months)/12 - yoe) > 2.5y -> flag
+# (career EXCEEDING stated experience = the impossible direction; under-listing is benign. Clean
+#  one-sided gap on the real pool: values at 1.92, 2.08, then a jump to 3.27.)
 HONEYPOT_EXPERT_SKILL_MIN_COUNT: int = 3    # >=3 "expert" skills with duration<=3mo -> flag
 HONEYPOT_EXPERT_SKILL_MAX_DURATION_MONTHS: int = 3
 # JD-TRACED: near-zero so a detected honeypot cannot mathematically reach the top-100 of 100K
@@ -112,6 +114,14 @@ AVAILABILITY_MULTIPLIERS = {
 SOFT_PREF_LOCATION_BONUS: float = 0.02
 SOFT_PREF_NOTICE_BONUS: float = 0.02
 SOFT_PREF_EXPERIENCE_COEF: float = 0.03   # (experience_band_fit - 1.0) * coef
+SOFT_PREF_ASSESSMENT_COEF: float = 0.03   # graded assessment corroboration (input already [0,1])
+
+# GitHub is a JD nice-to-have, never required (JD: OSS is "like to have but won't reject you for";
+# external validation can be "papers, talks, OR open-source"). We credit the organizer-provided
+# 0-100 activity score PROPORTIONALLY (graded, no arbitrary cutoff): bonus = MAX * (score/100),
+# and -1/absent stays strictly neutral. Replaces a crude binary ">60 -> +0.02" that gave a score
+# of 40 the same zero credit as -1 with no principled basis.
+GITHUB_BONUS_MAX: float = 0.03            # additive bonus at github_activity_score == 100
 
 # ---------------------------------------------------------------------------
 # Retrieval / text-match (§5). CONVENTION + GUESS->CALIBRATE per §7 table.

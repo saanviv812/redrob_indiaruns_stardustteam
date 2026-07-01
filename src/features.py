@@ -85,7 +85,7 @@ class StructuralFeatures:
     days_since_last_active: float       # vs corpus reference_date; -1.0 if unknown (neutral)
     recruiter_response_rate: float      # pool-median default if missing
     open_to_work: float                 # 1.0/0.0
-    github_positive: float              # 1.0 if github_activity_score > 60 (real positive signal)
+    github_signal: float                # graded [0,1] = score/100 (0 if absent/-1); JD nice-to-have
     assessment_corroboration: float     # [0,1] high assessment on a JD-relevant-ish skill
     # Dealbreakers:
     consulting_only_career: float       # hard gate (1.0/0.0)
@@ -263,8 +263,9 @@ def compute_features(cand: dict, reference_date: date) -> StructuralFeatures:
     rr = safe_float(sig.get("recruiter_response_rate"), default=None)
     response_rate = rr if rr is not None else DEFAULT_RESPONSE_RATE
 
+    # Graded, not binary: proportional to the organizer-provided 0-100 score; absent/-1 -> 0 (neutral).
     gh = safe_float(sig.get("github_activity_score"), default=-1.0)
-    github_pos = 1.0 if (gh is not None and gh > 60.0) else 0.0
+    github_signal = (max(0.0, min(100.0, gh)) / 100.0) if (gh is not None and gh >= 0.0) else 0.0
 
     return StructuralFeatures(
         years_of_experience=yoe if yoe is not None else 0.0,
@@ -275,7 +276,7 @@ def compute_features(cand: dict, reference_date: date) -> StructuralFeatures:
         days_since_last_active=_days_since_last_active(cand, reference_date),
         recruiter_response_rate=response_rate,
         open_to_work=1.0 if sig.get("open_to_work_flag") else 0.0,
-        github_positive=github_pos,
+        github_signal=github_signal,
         assessment_corroboration=assessment_corroboration(cand),
         consulting_only_career=1.0 if consulting_only_career(cand) else 0.0,
         title_chaser=1.0 if title_chaser(cand) else 0.0,

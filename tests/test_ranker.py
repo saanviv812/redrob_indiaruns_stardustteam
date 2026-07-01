@@ -90,6 +90,13 @@ class TestHoneypots(unittest.TestCase):
         c = _candidate(profile={}, career_history=[{"duration_months": 200, "is_current": True}])
         self.assertFalse(honeypots.experience_inflation_flag(c))  # missing data never gates
 
+    def test_under_listed_career_not_flagged(self):
+        # 10y stated experience but only 3y of listed roles = benign under-listed resume, NOT a
+        # honeypot. The (fixed) directional rule must not fire on this — only career INFLATION does.
+        c = _candidate(profile={"years_of_experience": 10.0},
+                       career_history=[{"duration_months": 36, "is_current": True}])
+        self.assertFalse(honeypots.experience_inflation_flag(c))
+
     def test_overclaim_strength(self):
         c = _candidate(
             skills=[_skill("NLP", "expert", 12)],
