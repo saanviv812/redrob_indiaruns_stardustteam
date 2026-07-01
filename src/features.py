@@ -79,7 +79,11 @@ class StructuralFeatures:
 
     years_of_experience: float          # raw, for reasoning + experience fit
     experience_band_fit: float          # 1.0 inside [5,9]y, linear decay outside
-    applied_ml_years_fit: float         # fit of est. applied-ML years against [4,5]y target
+    applied_ml_years_fit: float         # fit of est. applied-ML years against [4,5]y target.
+    # NOTE: cached for reasoning/analysis but intentionally NOT in the rank.py scoring blend — it was
+    # tested against the blind LLM-judge (corr 0.81 in isolation) and found REDUNDANT with the text/
+    # retrieval signals already used (adding it doesn't improve NDCG, hurts at real weights). See
+    # notebooks/llm_judge_validation.md. Kept because it's cheap, JD-aligned, and useful for reasoning.
     notice_period_ok: float             # 1.0 if notice_period_days <= 30 else 0.0
     location_acceptable: float          # 1.0 if India or willing_to_relocate; else 0.0
     days_since_last_active: float       # vs corpus reference_date; -1.0 if unknown (neutral)
