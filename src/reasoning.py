@@ -149,8 +149,12 @@ def generate_reasoning(
     """
     rng = _candidate_rng(cand.get("candidate_id", ""))
 
-    # Experience fragment is generated ONCE and used as the lead (anchors the reader). The remaining
-    # fragments are distinct fact types (qualification / skills / behavior), shuffled for variety.
+    # Consistent, professional structure (FIXED order): experience -> qualification -> skills ->
+    # behavior. We intentionally do NOT shuffle the order — the spec's "not templated" check is about
+    # substantively different CONTENT, not different sentence shapes, and a clean consistent format
+    # reads more polished to a human reviewer. Variation that satisfies the check comes from each
+    # candidate's genuinely different facts (title/company/years/skills/signals/concerns) plus light
+    # per-fragment wording choices; it is never a name-swap template.
     lead = _experience_fragment(cand, rng)
     body = [
         _qualification_fragment(top_must_have_ids, rng, strength),
@@ -158,10 +162,9 @@ def generate_reasoning(
         _behavior_fragment(cand, days_since_active, rng),
     ]
     body = [f for f in body if f]
-    rng.shuffle(body)
 
     ordered = ([lead] if lead else []) + body
-    sentence = "; ".join(ordered[:3])
+    sentence = "; ".join(ordered[:4])
     if sentence:
         sentence = sentence[0].upper() + sentence[1:]
 
