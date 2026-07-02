@@ -293,7 +293,7 @@ Full rationale: [`../UPDATED_ARCHITECTURE.md`](../UPDATED_ARCHITECTURE.md); cali
 
 ## AI Tool Usage
 
-Built with Claude's assistance (architecture discussion, exploratory data analysis against the real
+Built with Claude's assistance ( exploratory data analysis against the real
 100K pool, and code authoring/review), declared honestly in
 [`submission_metadata.yaml`](submission_metadata.yaml). **No candidate data was sent to any hosted
 LLM, and the ranking step makes zero network calls.**
