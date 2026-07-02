@@ -285,9 +285,9 @@ Fuller rationale and calibration evidence are in
 
 ## AI Tool Usage
 
-Our team designed, implemented, and validated this system. In line with the hackathon's transparency
-policy, we used AI assistance (Claude) as a development aid for exploratory data analysis and code
-review. Every criterion, threshold, and weight was decided by us and verified against the real data.
+Our team designed, implemented, and validated this system. We used AI assistance (Claude) as a
+development aid for exploratory data analysis and code review. Every criterion, threshold, and weight
+was decided by us and verified against the real data.
 No candidate data was sent to any external service, and the ranking pipeline makes no network calls.
 
 ## Team, Stardust
