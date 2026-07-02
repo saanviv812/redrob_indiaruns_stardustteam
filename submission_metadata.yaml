@@ -4,17 +4,23 @@
 # ============================================================================
 # Team identity
 # ============================================================================
-team_name: "<FILL: your registered team name>"
+team_name: "Stardust"
 
 primary_contact:
-  name: "<FILL: full name>"
-  email: "saanvivarma.raghavaraju@gmail.com"
-  phone: "<FILL: +91-XXXXXXXXXX>"
+  name: "Neha Shetty"
+  email: "nehashetty0305@gmail.com"
+  phone: "+91-9980053356"
 
 team_members:
-  - name: "<FILL: member full name>"
+  - name: "Neha Shetty"
+    email: "nehashetty0305@gmail.com"
+    role: "Team Lead & ML Engineer"
+  - name: "Saanvi Varma"
     email: "saanvivarma.raghavaraju@gmail.com"
-    role: "ML / Ranking Engineer"
+    role: "Ranking / Retrieval Engineer"
+  - name: "Hamsini"
+    email: "saanvivarma.raghavaraju@gmail.com"
+    role: "Data Scientist (EDA & Evaluation)"
 
 # ============================================================================
 # Code and reproducibility
