@@ -66,12 +66,12 @@ ai_usage_summary: |
 methodology_summary: |
   Deterministic, EDA-calibrated, certainty-gated ranker. A 17-criterion JD checklist is scored by a
   two-lane hybrid retrieval signal (TF-IDF+LSA matched at the career-ENTRY level with max-evidence,
-  fused with BM25 via Reciprocal Rank Fusion) and blended 0.85/0.15 with the retrieval component.
-  Structural facts (experience fit, applied-ML years, availability, GitHub/assessment positives)
+  fused with BM25 via Reciprocal Rank Fusion) and blended 0.90/0.10 with the retrieval component.
+  Structural facts (experience fit, applied-ML years, availability, GitHub/assessment corroboration)
   and eight JD-named dealbreakers are layered on as gates: structural/certain ones are hard
   multiplicative gates, text-derived ones are soft penalties scaled by match strength. Two
   EDA-verified honeypot rules (clean statistical separation in the real data) apply a near-zero
-  (x0.01) multiplier, keeping all 68 detected honeypots out of the top-100. Recency is anchored to
+  (x0.01) multiplier, keeping every profile they flag out of the top-100. Recency is anchored to
   the corpus timeline, never the wall clock. All heavy work is precomputed offline; the timed
   ranking step is pure cache-load + vectorized arithmetic (~19s, <16GB, CPU, no network).
 
