@@ -100,6 +100,6 @@ requirements.txt, submission_metadata.yaml, README.md
 
 ## AI tool usage
 
-This system was built with Claude's assistance (architecture discussion, code, EDA). Declared
+This system was built with Claude's assistance (code, EDA). Declared
 honestly in `submission_metadata.yaml`. No candidate data was sent to any hosted LLM; the ranking
 step makes zero network calls.
