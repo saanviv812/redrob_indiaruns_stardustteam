@@ -14,13 +14,13 @@ primary_contact:
 team_members:
   - name: "Neha Shetty"
     email: "nehashetty0305@gmail.com"
-    role: "Team Lead & ML Engineer"
+    role: "Machine Learning Developer"
   - name: "Saanvi Varma"
     email: "saanvivarma.raghavaraju@gmail.com"
-    role: "Ranking / Retrieval Engineer"
+    role: "Data Analyst"
   - name: "Hamsini"
     email: "saanvivarma.raghavaraju@gmail.com"
-    role: "Data Scientist (EDA & Evaluation)"
+    role: "Review and Testing"
 
 # ============================================================================
 # Code and reproducibility

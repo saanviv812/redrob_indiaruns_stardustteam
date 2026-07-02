@@ -294,9 +294,9 @@ No candidate data was sent to any external service, and the ranking pipeline mak
 
 | Member | Role |
 |---|---|
-| Neha Shetty | Team Lead and ML Engineer |
-| Saanvi Varma | Ranking and Retrieval Engineer |
-| Hamsini | Data Scientist (EDA and Evaluation) |
+| Neha Shetty | Machine Learning Developer |
+| Saanvi Varma | Data Analyst |
+| Hamsini | Review and Testing |
 
 ## Acknowledgements
 
