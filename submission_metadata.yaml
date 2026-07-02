@@ -55,7 +55,7 @@ ai_tools_used:
   - "Claude"
 
 ai_usage_summary: |
-  Used Claude for architecture discussion, exploratory data analysis against the real 100K pool,
+  Used Claude for exploratory data analysis against the real 100K pool,
   and code authoring/review. Every threshold and weight was verified against the actual data
   before being trusted (see notebooks/). No candidate data was sent to any hosted LLM, and the
   ranking step (rank.py) makes zero network calls.
