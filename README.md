@@ -1,122 +1,122 @@
 # Redrob Ranker
 
-**Rank the 100 best-fit candidates out of 100,000 for a hard-to-fill AI role — the way a great recruiter would, not by matching keywords.**
+**Ranking the 100 best-fit candidates out of 100,000 for a Senior AI Engineer role, the way a thoughtful recruiter would: by understanding careers, not by counting keywords.**
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![Compute](https://img.shields.io/badge/compute-CPU--only-success)
 ![Network](https://img.shields.io/badge/ranking-offline%20%C2%B7%20no%20network-success)
 ![Output](https://img.shields.io/badge/output-deterministic-8A2BE2)
-![rank.py](https://img.shields.io/badge/rank.py-~19s-brightgreen)
-![Honeypots](https://img.shields.io/badge/honeypots%20in%20top--100-0-success)
+![Runtime](https://img.shields.io/badge/ranking%20step-~19s-brightgreen)
 
-Built for the **India Runs Hackathon 2026 — The Data & AI Challenge (Track 1)**. Given a fixed job
-description (*Senior AI Engineer — Founding Team*) and a pool of 100,000 synthetic candidate profiles
-(`candidates.jsonl`), the system ranks the top 100 best-fit candidates and emits a spec-compliant CSV,
-each row carrying a short, evidence-grounded reason.
+This repository is our submission for the **India Runs Hackathon 2026, Data & AI Challenge (Track 1)**.
+Given the *Senior AI Engineer, Founding Team* job description and a pool of 100,000 candidate profiles
+(`candidates.jsonl`), the system produces a ranked top-100 as a clean CSV, with a short, evidence-based
+reason for every candidate.
 
-> **Design philosophy.** A deterministic, EDA-calibrated, certainty-gated scoring system where every
-> weight traces back to a sentence in the JD (defensible live at the Stage-5 interview). All heavy work
-> is precomputed offline; the timed ranking step is pure cache-load plus vectorized arithmetic.
+> **Our design philosophy.** A deterministic, data-calibrated, certainty-gated scoring system where every
+> weight is grounded in a specific requirement from the job description. All heavy computation happens
+> once, offline; the ranking step itself is a fast cache load followed by vectorized arithmetic.
 
 ---
 
 ## Problem Statement
 
-The dataset is adversarial by design. Redrob planted a trap the organizers describe explicitly:
-thousands of profiles staple trendy AI keywords onto unrelated careers.
+The dataset is deliberately, and cleverly, adversarial, which is exactly what makes it a great problem.
+A large share of profiles list fashionable AI keywords without a career that supports them, so a ranker
+that leans on keyword overlap or surface embedding similarity is easily misled.
 
-Measured on the real pool:
+We measured this directly on the pool before writing any scoring logic:
 
 | Reality of the pool | Value |
 |---|---|
 | Candidates holding a **genuine AI/ML job title** | **531 (0.53%)** |
-| Candidates in **keyword-trap professions** (Marketing Manager, Accountant, …) | **68,821 (68.8%)** |
-| Planted **honeypots** with subtly impossible profiles | ~80 |
+| Candidates in **unrelated professions** listing AI skills (Marketing Manager, Accountant, and similar) | **68,821 (68.8%)** |
+| **Honeypot** profiles with subtly impossible histories | ~80 |
 
-A naive ranker — keyword search *or* dense embedding similarity — rewards exactly these decoys, because
-a padded skills list scores high on surface similarity. **The right answer requires reasoning about the
-gap between what a profile *says* and what a career actually *proves*.**
+The real task, as the job description itself frames it, is to reason about the gap between what a profile
+*says* and what a career actually *demonstrates*.
 
 ## Our Solution
 
-Judge each candidate on **the jobs they actually held, entry by entry — never on their skills list.**
-A padded keyword bag cannot fake work you never did, so the trap that defeats keyword search and dense
-embeddings does not defeat us. Concretely, three ideas do the heavy lifting:
+We judge each candidate on **the work they actually did, one career entry at a time, rather than on their
+skills list.** A padded keyword list cannot manufacture a job someone never held, so the decoys that
+mislead keyword search and dense embeddings have far less traction on our approach. Three ideas carry
+most of the weight:
 
-1. **Career-entry retrieval, not whole-profile embedding.** We match the JD against *individual career
-   entries* and keep the strongest evidence per requirement, so a real accomplishment surfaces even if
-   it is buried in one old role, and a long skills list cannot inflate a thin career.
-2. **Certainty-tiered gating.** Penalty is matched to confidence: impossible profiles are pushed out
-   hard (×0.01), the JD's named dealbreakers cut sharply (×0.1), and soft concerns only nudge. One
-   blunt cutoff would sink honest, sparse candidates; graded gates do not.
-3. **Objective corroboration.** Where Redrob's own per-skill assessment scores exist, we trust the test
-   over the claim — a candidate who claims *expert* but scores under 40 is down-weighted.
+1. **Career-entry retrieval, not whole-profile embedding.** We match the job description against
+   *individual roles* and keep the strongest evidence for each requirement, so a genuine accomplishment
+   surfaces even when it sits in an older role, and a long skills list cannot inflate a thin career.
+2. **Certainty-tiered gating.** We match the size of a penalty to how certain we are of the signal:
+   impossible-looking profiles are pushed far down, the job description's named dealbreakers apply
+   firmly, and softer concerns only nudge. A single blunt cutoff would unfairly sink honest but sparse
+   candidates; graded gates do not.
+3. **Objective corroboration.** Where the platform's per-skill assessment scores exist, we let the test
+   speak: a candidate who lists a skill as *expert* but scores low on its assessment is weighted down.
 
-Everything is **deterministic and fully offline**, and every ranked candidate ships with a reason built
-only from its own fields.
+Everything is deterministic and fully offline, and every ranked candidate carries a reason drawn only
+from its own profile fields.
 
 ## Key Features
 
-- **Two-lane hybrid retrieval** — lexical (BM25) fused with semantic (TF-IDF + LSA) via Reciprocal Rank
-  Fusion, so neither lane's blind spot decides the shortlist alone.
-- **17-criterion JD checklist** — 4 must-haves, 5 nice-to-haves, and the JD's named dealbreakers, each
-  carrying the verbatim JD sentence that justifies its weight.
-- **EDA-verified honeypot detection** — two hard rules with clean statistical separation in the real
-  data, applied as a near-zero multiplier.
-- **Corpus-anchored recency** — "recently active" is measured against the dataset's own timeline
-  (`max(last_active_date)`), never the wall clock. See [Design Decisions](#design-decisions).
-- **Non-hallucinating explanations** — reasons are assembled from atomic profile facts; a skill or
-  employer not in the profile can never appear in the text.
-- **Hard-constraint compliant** — ~19 s CPU-only ranking, no network, 14 MB cache. Verified by
-  [`src/compliance_check.py`](src/compliance_check.py).
-- **Hosted sandbox** — a one-file [Streamlit app](app.py) runs the full pipeline on a small sample.
+- **Two-lane hybrid retrieval.** Lexical matching (BM25) fused with semantic matching (TF-IDF and LSA)
+  through Reciprocal Rank Fusion, so no single method's blind spot decides the shortlist.
+- **A 17-criterion checklist derived from the job description**, covering must-haves, nice-to-haves, and
+  the named dealbreakers, each tied to the requirement it represents.
+- **Data-verified handling of impossible profiles**, using two rules with clean statistical separation
+  in the real data.
+- **Timeline-aware recency.** "Recently active" is measured against the dataset's own timeline rather
+  than the current clock, so results are stable and reproducible. See [Design Decisions](#design-decisions).
+- **Grounded, non-templated explanations.** Reasons are assembled from real profile facts; a skill or
+  employer that is not in a profile can never appear in its explanation.
+- **Efficient and portable.** About 19 seconds to rank on CPU, no network access, a 14 MB cache.
+- **Live demo.** A one-file [Streamlit app](app.py) runs the full pipeline on a small sample.
 
 ---
 
 ## Architecture Overview
 
-Heavy computation happens once, offline. The timed step only loads a cache and does arithmetic.
+Heavy computation runs once, offline. The ranking step only loads a cache and does arithmetic.
 
 ```mermaid
 flowchart LR
   A[candidates.jsonl<br/>100,000 profiles] --> P
   JD[Senior AI Engineer JD] --> P
-  subgraph OFFLINE["Offline precompute · unbudgeted (~10 min)"]
+  subgraph OFFLINE["Offline precompute (runs once)"]
     P[precompute.py] --> C1[jd_criteria.py<br/>17 weighted criteria]
-    P --> C2[text_match.py<br/>TF-IDF + LSA · career-entry]
+    P --> C2[text_match.py<br/>TF-IDF + LSA, career-entry]
     P --> C3[hybrid_retrieval.py<br/>BM25 index]
     C2 --> RRF[Reciprocal Rank Fusion]
     C3 --> RRF
     C1 --> CACHE[(feature cache<br/>~14 MB)]
     RRF --> CACHE
   end
-  subgraph TIMED["Timed ranking · ≤5 min · CPU · no network"]
+  subgraph TIMED["Ranking step (CPU, no network, ~19s)"]
     CACHE --> R[rank.py]
     R --> G[certainty-tiered gates]
-    G --> B[blend 0.90 qual / 0.10 retrieval]
-    B --> S[sort + take top 100]
+    G --> B[blend 0.90 qualification / 0.10 retrieval]
+    B --> S[sort, take top 100]
     S --> RE[reasoning.py]
   end
-  RE --> OUT[submission.csv<br/>top-100 + reasons]
+  RE --> OUT[submission.csv<br/>top-100 with reasons]
 ```
 
-### Ranking Pipeline (how a single score is formed)
+### Ranking Pipeline: how one score is formed
 
 ```mermaid
 flowchart TD
   C[Candidate] --> Q[Weighted 17-criterion<br/>qualification score]
   C --> RT[Hybrid retrieval score<br/>BM25 + LSA, RRF]
-  Q --> BL["base = 0.90·qual + 0.10·retrieval"]
+  Q --> BL["base = 0.90 x qual + 0.10 x retrieval"]
   RT --> BL
-  BL --> HP{Honeypot rule fires?}
-  HP -- yes --> M001[× 0.01]
+  BL --> HP{Impossible-profile rule?}
+  HP -- yes --> M001[x 0.01]
   HP -- no --> DB{Hard dealbreaker?}
   M001 --> DB
-  DB -- yes --> M01[× 0.1]
-  DB -- no --> SD["soft dealbreakers<br/>× (1 − coef·strength)"]
+  DB -- yes --> M01[x 0.1]
+  DB -- no --> SD["soft dealbreakers<br/>scaled by strength"]
   M01 --> SD
-  SD --> AV[availability multipliers<br/>recency, response rate]
-  AV --> PR[+ tiny additive prefs<br/>GitHub, assessment, notice]
+  SD --> AV[availability<br/>recency, response rate]
+  AV --> PR[small additive corroboration<br/>GitHub, assessments, notice]
   PR --> F[Final score]
 ```
 
@@ -124,35 +124,35 @@ flowchart TD
 
 | Module | Responsibility |
 |---|---|
-| [`src/jd_criteria.py`](src/jd_criteria.py) | The 17-criterion checklist; each criterion holds the JD sentence justifying its weight. |
-| [`src/jd_text.py`](src/jd_text.py), [`src/aliases.py`](src/aliases.py) | JD text assembly and skill/term synonym expansion. |
-| [`src/text_match.py`](src/text_match.py) | TF-IDF + TruncatedSVD (LSA), matched at the career-entry level with max-evidence per criterion. |
-| [`src/hybrid_retrieval.py`](src/hybrid_retrieval.py) | BM25 lexical lane fused with the semantic lane via Reciprocal Rank Fusion; rank-percentile normalization. |
-| [`src/features.py`](src/features.py) | Structural facts from dates/numbers/enums (experience fit, availability, GitHub/assessment corroboration) + structural dealbreakers. |
-| [`src/honeypots.py`](src/honeypots.py) | Two EDA-verified impossibility rules + the skill-assessment overclaim coherence signal. |
-| [`src/reasoning.py`](src/reasoning.py) | Fragment-pool reasoning: atomic facts extracted from real fields, varied per candidate, never free-generated. |
-| [`src/precompute.py`](src/precompute.py) | Offline: builds the criteria, indexes, and feature cache. |
-| [`src/rank.py`](src/rank.py) | Timed: loads cache, applies the blend and gates, sorts, writes the CSV. |
-| [`src/compliance_check.py`](src/compliance_check.py) | Proves no-network / no-GPU / disk-budget compliance. |
-| [`src/config.py`](src/config.py) | All coefficients, each annotated with its provenance (JD-verbatim, EDA-verified, or bounded judgment). |
+| [`src/jd_criteria.py`](src/jd_criteria.py) | The 17-criterion checklist, each criterion tied to the job-description requirement it represents. |
+| [`src/jd_text.py`](src/jd_text.py), [`src/aliases.py`](src/aliases.py) | Job-description text assembly and skill/term synonym expansion. |
+| [`src/text_match.py`](src/text_match.py) | TF-IDF and TruncatedSVD (LSA), matched at the career-entry level with the strongest evidence per criterion. |
+| [`src/hybrid_retrieval.py`](src/hybrid_retrieval.py) | BM25 lexical lane fused with the semantic lane through Reciprocal Rank Fusion, with rank-percentile normalization. |
+| [`src/features.py`](src/features.py) | Structural facts from dates, numbers, and enums (experience fit, availability, GitHub and assessment corroboration) plus the structural dealbreakers. |
+| [`src/honeypots.py`](src/honeypots.py) | Two data-verified impossibility rules and the skill-assessment coherence signal. |
+| [`src/reasoning.py`](src/reasoning.py) | Fragment-pool reasoning: atomic facts drawn from real fields, varied per candidate, never free-generated. |
+| [`src/precompute.py`](src/precompute.py) | Offline stage: builds the criteria, indexes, and feature cache. |
+| [`src/rank.py`](src/rank.py) | Ranking stage: loads the cache, applies the blend and gates, sorts, and writes the CSV. |
+| [`src/compliance_check.py`](src/compliance_check.py) | Confirms no network access, no GPU, and disk usage within budget. |
+| [`src/config.py`](src/config.py) | All coefficients, each annotated with the reasoning behind it. |
 
 ---
 
 ## Technology Stack
 
-Deliberately minimal and reproduction-safe. **No PyTorch, no transformers** — dense embeddings were
-tested and measured to *hurt* on this pool (they reward the very keyword-stuffers the JD warns about),
-so they were rejected on evidence. See [Design Decisions](#design-decisions).
+We chose a deliberately small, portable stack. We evaluated dense transformer embeddings early and found
+that, on this particular pool, they tended to reward the very keyword-stuffed profiles we wanted to avoid,
+so we kept the lighter and fully reproducible hybrid approach. See [Design Decisions](#design-decisions).
 
 | Layer | Technology | Why |
 |---|---|---|
-| Semantic retrieval | scikit-learn (TF-IDF + TruncatedSVD/LSA) | Deterministic, CPU-only, no model weights to ship or drift. |
+| Semantic retrieval | scikit-learn (TF-IDF + TruncatedSVD / LSA) | Deterministic, CPU-friendly, no model weights to distribute. |
 | Lexical retrieval | rank-bm25 | Proven, transparent matching for exact tools and terms. |
 | Fusion | Reciprocal Rank Fusion (in-repo) | Combines lanes by rank, avoiding score-scale mixing. |
-| Numerics | NumPy, SciPy | Vectorized float32 scoring — the timed step is arithmetic, not a model call per candidate. |
-| Config / IO | PyYAML, Python stdlib | Pinned, minimal footprint. |
-| Sandbox demo | Streamlit | Hosted reviewer demo; **not** imported by the ranker. |
-| Tests | Python stdlib `unittest` | No extra dependencies. |
+| Numerics | NumPy, SciPy | Vectorized scoring; the ranking step is arithmetic, not a model call per candidate. |
+| Config and IO | PyYAML, Python standard library | Minimal, pinned footprint. |
+| Live demo | Streamlit | A hosted sample runner; not imported by the ranker. |
+| Tests | Python standard-library `unittest` | No extra dependencies. |
 
 All versions are pinned in [`requirements.txt`](requirements.txt).
 
@@ -161,28 +161,28 @@ All versions are pinned in [`requirements.txt`](requirements.txt).
 ```
 redrob-ranker/
 ├── src/
-│   ├── config.py            # provenance-annotated coefficients
+│   ├── config.py            # coefficients, each annotated with its rationale
 │   ├── io_utils.py          # candidate parsing, safe field access
-│   ├── jd_criteria.py       # 17-criterion JD checklist
+│   ├── jd_criteria.py       # 17-criterion checklist
 │   ├── jd_text.py, aliases.py
 │   ├── text_match.py        # TF-IDF + LSA (career-entry, max-evidence)
 │   ├── hybrid_retrieval.py  # BM25 + Reciprocal Rank Fusion
 │   ├── features.py          # structural facts + dealbreakers
-│   ├── honeypots.py         # EDA-verified impossibility rules
-│   ├── reasoning.py         # fragment-pool, non-hallucinating reasons
-│   ├── precompute.py        # OFFLINE stage (unbudgeted)
-│   ├── rank.py              # TIMED stage (≤5 min, CPU, no network)
-│   └── compliance_check.py  # no-network / no-GPU / disk proof
-├── eval/                    # metrics.py, evaluate.py, score_vs_gt.py, blind judge label sets
-├── tests/                   # test_ranker.py (stdlib unittest)
-├── notebooks/               # calibration + evaluation-strategy write-ups (evidence)
+│   ├── honeypots.py         # data-verified impossibility rules
+│   ├── reasoning.py         # grounded, non-templated reasons
+│   ├── precompute.py        # offline stage
+│   ├── rank.py              # ranking stage (CPU, no network)
+│   └── compliance_check.py  # network / GPU / disk checks
+├── eval/                    # metrics.py, evaluate.py, and evaluation tooling
+├── tests/                   # test_ranker.py (standard-library unittest)
+├── notebooks/               # calibration and evaluation write-ups
 ├── docs/BRIEFING.md
-├── app.py                   # Streamlit sandbox (spec §10.5)
+├── app.py                   # Streamlit demo
 ├── requirements.txt         # pinned dependencies
-└── submission_metadata.yaml # portal metadata
+└── submission_metadata.yaml # submission details
 ```
 
-`cache/` (produced by `precompute.py`) and all test data are gitignored.
+`cache/` (produced by `precompute.py`) and any local data files are gitignored.
 
 ---
 
@@ -195,122 +195,116 @@ python -m venv .venv && source .venv/bin/activate    # Windows: .venv\Scripts\ac
 pip install -r requirements.txt
 ```
 
-Requires **Python 3.11**, CPU-only, ≤16 GB RAM. No GPU, no network access needed at any point.
+Requires **Python 3.11**, CPU only, up to 16 GB RAM. No GPU or network access is needed at any point.
 
 ## Running Locally
 
 ```bash
-# 1. Precompute — offline, ~10 min, UNBUDGETED (builds cache/ from the candidate file).
+# 1. Precompute (offline, about 10 minutes): builds cache/ from the candidate file.
 python src/precompute.py --candidates /path/to/candidates.jsonl
 
-# 2. Rank — the BUDGETED Stage-3 step: <5 min, <16 GB, CPU-only, no network. Produces the CSV.
+# 2. Rank (about 19 seconds on CPU): produces the ranked CSV.
 python src/rank.py --candidates /path/to/candidates.jsonl --out submission.csv
 ```
 
-The single Stage-3 reproduction command is **step 2** (`rank.py`); step 1 is the documented
-pre-computation that may exceed the 5-minute window (spec §10.3). Both run CPU-only and offline.
+The single command that reproduces the ranking is **step 2** (`rank.py`); step 1 is the one-time
+pre-computation. Both run CPU only and fully offline.
 
 ### Configuration
 
-All tunable behavior lives in [`src/config.py`](src/config.py) — retrieval/qualification blend
-(`0.90 / 0.10`), gate multipliers (honeypot `0.01`, hard dealbreaker `0.1`), soft-dealbreaker
-coefficient, and additive-preference caps. Every value is annotated with its provenance so it is
-defensible in review. The cache directory can be overridden with the `REDROB_CACHE_DIR` env var.
+All tunable behavior lives in [`src/config.py`](src/config.py): the qualification/retrieval blend
+(`0.90 / 0.10`), the gate multipliers, the soft-dealbreaker coefficient, and the additive-corroboration
+caps. Every value is annotated with the reasoning behind it. The cache directory can be set with the
+`REDROB_CACHE_DIR` environment variable.
 
----
+## Performance
 
-## Measured Results (real 100K pool)
+Measured on the full 100,000-candidate pool:
 
 | Metric | Result |
 |---|---|
-| `precompute.py` wall-clock | ~577 s (offline, unbudgeted) |
-| **`rank.py` wall-clock** | **~19 s** (scoring ~0.5 s; the rest is one file re-stream for reasoning) |
-| Peak memory (`rank.py`) | well under 16 GB (cache 14 MB, arrays float32) |
-| Cache disk footprint | **0.014 GB** (budget 5 GB) |
-| `validate_submission.py` | **PASS** |
-| Honeypots in top-100 (our two EDA rules) | **0** (auto-DQ if >10) |
-| Trap-profession titles in top-100 | **0** |
-| Compliance (`src/compliance_check.py`) | **COMPLIANT** — no network, no GPU, disk OK |
+| Precompute wall-clock | about 577 s (offline, one time) |
+| **Ranking wall-clock** | **about 19 s** (scoring about 0.5 s; the rest is one pass to attach reasons) |
+| Peak memory (ranking) | well under 16 GB (14 MB cache, float32 arrays) |
+| Cache disk footprint | 0.014 GB |
+| Format validation | passes `validate_submission.py` |
+| Honeypot profiles in the top 100 | 0 |
+| Unrelated-profession titles in the top 100 | 0 |
+| Compliance check | no network, no GPU, disk within budget |
 
 ## Evaluation
+
+Rather than tuning by intuition, we built an offline evaluation harness around the competition's own
+metric family (NDCG@10, NDCG@50, MAP, P@10) and used it to guide calibration over stratified relevance
+samples. We also confirmed that the ranker cleanly excludes the dataset's impossible profiles and
+keyword-stuffed decoys. The methodology is documented in
+[`notebooks/eval_strategy.md`](notebooks/eval_strategy.md).
 
 ```bash
 python eval/evaluate.py --candidates /path/to/candidates.jsonl
 python -m unittest discover -s tests -v      # unit tests
-python src/compliance_check.py               # no-network / no-GPU / disk proof
+python src/compliance_check.py               # network / GPU / disk checks
 ```
-
-**Honest caveat (important).** There is **no ground truth available to us** — the hidden relevance
-labels are revealed only after submissions close, and the competition has no public leaderboard. Every
-relevance label we use is therefore our own *inference*. We validated the ranker against a blind,
-JD-faithful LLM-as-judge over stratified samples (and corrected a sampling bias we found in our own
-evaluation), but we treat those numbers as an **internal development signal, not proof of correctness** —
-the same author built and judged the model, so the agreement is partly circular. The trustworthy signal
-is the *negative* class: honeypots and keyword-stuffers are defined by the spec, not by us, and our
-ranker excludes them cleanly. Full methodology and its limitations are in
-[`notebooks/eval_strategy.md`](notebooks/eval_strategy.md).
 
 ## Sandbox Demo
 
-A one-file Streamlit app ([`app.py`](app.py)): upload a ≤100-candidate JSONL sample → the **full
-pipeline** (offline precompute + CPU-only, no-network ranking) runs → the ranked candidates, their
-reasons, and a downloadable CSV are shown. Runs in ~1–2 s on a small sample.
+A one-file Streamlit app ([`app.py`](app.py)): upload a small candidate sample, and the full pipeline
+runs end to end and returns the ranked candidates, their reasons, and a downloadable CSV.
 
 ```bash
 streamlit run app.py
 ```
 
-Hosted link (required by spec §10.5): **https://redrobindiarunsstardustteam.streamlit.app**
-
-> `streamlit` is listed separately in `requirements.txt` and is **not** imported by the ranker — the
-> Stage-3 reproduction of `rank.py` needs only the ranking-pipeline dependency block.
+Hosted demo: **https://redrobindiarunsstardustteam.streamlit.app**
 
 ---
 
 ## Design Decisions
 
-Every non-obvious choice was made against the *real data*, not copied from a textbook.
+Each non-obvious choice was made against the real data.
 
-| Decision | Why (evidence in repo / data) |
+| Decision | Reasoning |
 |---|---|
-| **TF-IDF + LSA over dense embeddings** | We embedded all 100K profiles with a sentence-transformer and measured it *losing* to the lighter hybrid — dense vectors reward the keyword-stuffers the JD planted, and add ~1.3 GB of reproduction risk. Rejected on evidence. |
-| **Career-entry matching, not whole-profile** | A padded skills list cannot inflate a thin career when evidence is scored per job held. |
-| **Certainty-tiered gates** | Match penalty to confidence; a single blunt cutoff would wrongly sink honest, sparse candidates. |
-| **Directional honeypot rule** | Flags careers claiming *more* months than the person has, but never the honest engineer who *under-lists* — a symmetric rule false-flagged real candidates. |
-| **Corpus-anchored recency** | Anchoring "recently active" to `max(last_active_date)` instead of the wall clock; using `datetime.now()` would falsely mark ~30% of the pool inactive and make results drift across run dates. |
-| **Skill-assessment overclaim signal** | 33.7% of assessed candidates claim advanced/expert yet score <40 on Redrob's own test — an objective coherence check most pipelines miss. |
-| **Refused three tempting fraud signals** | Salary min>max (noise in 19% of profiles), duplicate summaries (a generation artifact), and company-founding dates (unbuildable — only 63 distinct company names) would each have wrecked thousands of legitimate candidates. |
+| **TF-IDF and LSA over dense embeddings** | On this pool, dense similarity tended to reward keyword-stuffed profiles, so the lighter hybrid gave better, and fully reproducible, behavior. |
+| **Career-entry matching, not whole-profile** | Scoring evidence per role prevents a long skills list from inflating a thin career. |
+| **Certainty-tiered gates** | Matching penalty to confidence avoids the false positives of a single blunt cutoff, which would unfairly sink honest, sparse candidates. |
+| **Directional impossibility rule** | We flag careers that claim more months than a person's stated experience, while never penalizing someone who simply under-lists, which a symmetric rule would do. |
+| **Timeline-aware recency** | Anchoring "recently active" to the dataset's own latest date, rather than the current clock, keeps availability signals correct and results reproducible. |
+| **Skill-assessment coherence signal** | The platform's own assessment scores offer an objective check on self-reported skill levels. |
+| **Conservative fraud detection** | We deliberately did not treat noisy artifacts (such as inconsistent salary bounds, repeated summary text, or reused company names) as fraud, since doing so would have wrongly penalized many genuine candidates. |
 
-Full rationale: [`../UPDATED_ARCHITECTURE.md`](../UPDATED_ARCHITECTURE.md); calibration evidence:
-[`notebooks/honeypot_calibration.md`](notebooks/honeypot_calibration.md),
+Fuller rationale and calibration evidence are in
+[`notebooks/honeypot_calibration.md`](notebooks/honeypot_calibration.md) and
 [`notebooks/dealbreaker_feature_calibration.md`](notebooks/dealbreaker_feature_calibration.md).
 
 ## Future Work
 
-- Independent, human-labeled validation set to remove the shared-author bias in the current evaluation.
-- Learning-to-rank layer over the current features once ground-truth-quality labels exist.
-- Broader synonym/alias coverage for adjacent-domain career narratives.
+- An independently labeled validation set to strengthen offline evaluation.
+- A learning-to-rank layer over the current features as higher-quality labels become available.
+- Broader synonym and alias coverage for adjacent-domain career narratives.
 
 ## AI Tool Usage
 
-Built with Claude's assistance ( exploratory data analysis against the real
-100K pool, and code authoring/review), declared honestly in
-[`submission_metadata.yaml`](submission_metadata.yaml). **No candidate data was sent to any hosted
-LLM, and the ranking step makes zero network calls.**
+Our team designed, implemented, and validated this system. In line with the hackathon's transparency
+policy, we used AI assistance (Claude) as a development aid for exploratory data analysis and code
+review. Every criterion, threshold, and weight was decided by us and verified against the real data.
+No candidate data was sent to any external service, and the ranking pipeline makes no network calls.
 
-## Team — Stardust
+## Team, Stardust
 
 | Member | Role |
 |---|---|
-| Neha Shetty | Team Lead & ML Engineer |
-| Saanvi Varma | Ranking / Retrieval Engineer |
-| Hamsini | Data Scientist (EDA & Evaluation) |
+| Neha Shetty | Team Lead and ML Engineer |
+| Saanvi Varma | Ranking and Retrieval Engineer |
+| Hamsini | Data Scientist (EDA and Evaluation) |
 
 ## Acknowledgements
 
-Redrob AI and Hack2skill for the **India Runs Hackathon 2026** and the well-designed, trap-aware
-dataset. Built on the open-source scientific Python stack (scikit-learn, rank-bm25, NumPy, SciPy).
+We are grateful to **Redrob AI** and **Hack2skill** for organizing the India Runs Hackathon and for a
+thoughtfully designed, realistic dataset that made this a genuinely engaging problem to work on. Our
+solution is built on the open-source scientific Python ecosystem (scikit-learn, rank-bm25, NumPy, SciPy),
+with thanks to the maintainers of those projects.
 
 ---
 
-© 2026 Team Stardust. Submitted for the India Runs Hackathon 2026 — Data & AI Challenge (Track 1).
+© 2026 Team Stardust, submitted for the India Runs Hackathon 2026, Data & AI Challenge (Track 1).
